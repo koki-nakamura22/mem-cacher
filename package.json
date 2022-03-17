@@ -1,5 +1,5 @@
 {
-  "name": "mem-cache",
+  "name": "mem-cacher",
   "version": "0.1.0",
   "description": "Javascript caching library.",
   "main": "index.js",
@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/koki-nakamura22/mem-cache.git"
+    "url": "git+https://github.com/koki-nakamura22/mem-cacher.git"
   },
   "author": "Koki NAKAMURA",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/koki-nakamura22/mem-cache/issues"
+    "url": "https://github.com/koki-nakamura22/mem-cacher/issues"
   },
-  "homepage": "https://github.com/koki-nakamura22/mem-cache#readme",
+  "homepage": "https://github.com/koki-nakamura22/mem-cacher#readme",
   "devDependencies": {
     "@babel/core": "^7.17.7",
     "@babel/preset-env": "^7.16.11",

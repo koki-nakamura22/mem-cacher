@@ -1,6 +1,13 @@
 "use strict";
 
-function memoizeFunction(func) {
+/**
+ * Memoize function.
+ * @param {Function} func
+ * @param {JSON} option
+ * @param {Number} option.duration Cache duration. (seconds)
+ * @returns {Function} Memoized function.
+ */
+function memoizeFunction(func, option = {}) {
   let cache = {};
   return new Proxy(func, {
     apply(target, thisArg, args) {
@@ -10,6 +17,13 @@ function memoizeFunction(func) {
         return cacheData;
       } else {
         const result = target.apply(thisArg, args);
+
+        if (option.duration && Number.isInteger(option.duration)) {
+          setTimeout(() => {
+            delete cache[cacheKey];
+          }, option.duration);
+        }
+
         cache[cacheKey] = result;
         return result;
       }

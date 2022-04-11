@@ -2,39 +2,72 @@
 
 import { memoizeFunction } from "../mem-cacher.js";
 
-const wait = (millisecond) => {
-  // Dirty code...
-  const start = new Date().getTime();
-  let end = 0;
-  while (end - start < millisecond) end = new Date().getTime();
+beforeEach(() => {
+  jest.useFakeTimers();
+});
+
+afterEach(() => {
+  jest.useRealTimers();
+});
+
+const waitMillisecconds = 1000;
+const wait = (millisecond) => jest.advanceTimersByTime(millisecond);
+
+const add = (x, y) => {
+  wait(waitMillisecconds);
+  return x + y;
 };
 
+function testRapper({ func, params, toBeValue, timeTakenMillisecond }) {
+  const startTime = performance.now();
+  expect(func(params.x, params.y)).toBe(toBeValue);
+  const elapsedTime = performance.now() - startTime;
+  expect(elapsedTime).toBe(timeTakenMillisecond);
+}
+
 it("memoize and use function cache", () => {
-  const waitMillisecconds = 3000;
+  const option = {
+    duration: 1000, // Cache's time to live (Millisecond)
+  };
+  const memoizedAdd = memoizeFunction(add, option);
 
-  function add(x, y) {
-    wait(waitMillisecconds);
-    return x + y;
-  }
+  const params = {
+    x: 1,
+    y: 2,
+  };
+  const toBeValue = 3;
 
-  const memoizedAdd = memoizeFunction(add);
+  // Not using cache
+  testRapper({
+    func: memoizedAdd,
+    params: params,
+    toBeValue: toBeValue,
+    timeTakenMillisecond: 1000,
+  });
 
-  const notUsingCacheStartTime = performance.now();
-  expect(memoizedAdd(1, 2)).toEqual(3);
-  const notUsingCacheEndTime = performance.now();
-  expect(notUsingCacheEndTime - notUsingCacheStartTime).toBeGreaterThanOrEqual(
-    waitMillisecconds
-  );
+  // Using cache
+  testRapper({
+    func: memoizedAdd,
+    params: params,
+    toBeValue: toBeValue,
+    timeTakenMillisecond: 0,
+  });
 
-  const usingCacheStartTime = performance.now();
-  expect(memoizedAdd(1, 2)).toEqual(3);
-  const usingCacheEndime = performance.now();
-  expect(usingCacheEndime - usingCacheStartTime).toBeLessThanOrEqual(100);
+  // Using the cache because it exists
+  wait(500);
+  testRapper({
+    func: memoizedAdd,
+    params: params,
+    toBeValue: toBeValue,
+    timeTakenMillisecond: 0,
+  });
 
-  const notUsingCacheStartTime2 = performance.now();
-  expect(memoizedAdd(3, 4)).toEqual(7);
-  const notUsingCacheEndTime2 = performance.now();
-  expect(
-    notUsingCacheEndTime2 - notUsingCacheStartTime2
-  ).toBeGreaterThanOrEqual(waitMillisecconds);
+  // Not using the cache because it does not exist
+  wait(500);
+  testRapper({
+    func: memoizedAdd,
+    params: params,
+    toBeValue: toBeValue,
+    timeTakenMillisecond: 1000,
+  });
 });

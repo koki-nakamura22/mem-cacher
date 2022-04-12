@@ -23,12 +23,19 @@ function calcTimeDiff(datetime1, datetime2) {
  * Memoize function.
  * @param {Function} func
  * @param {JSON} option
- * @param {Number} option.maxAge Cache max age. (seconds)
- * @param {Date} option.expirationDate Cache expiration date time.
+ * @param {Number} option.maxAge Cache max age. (seconds) Cannot use with expirationDate.
+ * @param {Date} option.expirationDate Cache expiration date time. Cannot use with maxAge.
  * @returns {Function} Memoized function.
  */
 function memoizeFunction(func, option = {}) {
   let cache = {};
+
+  const setCacheDeleteTimer = (key, ms) => {
+    setTimeout(() => {
+      delete cache[key];
+    }, ms);
+  };
+
   return new Proxy(func, {
     apply(target, thisArg, args) {
       const cacheKey = JSON.stringify(args);
@@ -39,16 +46,12 @@ function memoizeFunction(func, option = {}) {
         const result = target.apply(thisArg, args);
 
         if (option.maxAge && Number.isInteger(option.maxAge)) {
-          setTimeout(() => {
-            delete cache[cacheKey];
-          }, option.maxAge);
+          setCacheDeleteTimer(cacheKey, option.maxAge);
         }
 
         if (option.expirationDate && isDateValid(option.expirationDate)) {
-          const millisecond = calcTimeDiff(option.expirationDate, new Date());
-          setTimeout(() => {
-            delete cache[cacheKey];
-          }, millisecond);
+          const ms = calcTimeDiff(option.expirationDate, new Date());
+          setCacheDeleteTimer(cacheKey, ms);
         }
 
         cache[cacheKey] = result;

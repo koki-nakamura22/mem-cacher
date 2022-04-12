@@ -4,7 +4,7 @@
  * Memoize function.
  * @param {Function} func
  * @param {JSON} option
- * @param {Number} option.duration Cache duration. (seconds)
+ * @param {Number} option.maxAge Cache max age. (seconds)
  * @returns {Function} Memoized function.
  */
 function memoizeFunction(func, option = {}) {
@@ -18,10 +18,10 @@ function memoizeFunction(func, option = {}) {
       } else {
         const result = target.apply(thisArg, args);
 
-        if (option.duration && Number.isInteger(option.duration)) {
+        if (option.maxAge && Number.isInteger(option.maxAge)) {
           setTimeout(() => {
             delete cache[cacheKey];
-          }, option.duration);
+          }, option.maxAge);
         }
 
         cache[cacheKey] = result;

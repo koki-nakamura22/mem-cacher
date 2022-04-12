@@ -27,7 +27,7 @@ function testRapper({ func, params, toBeValue, timeTakenMillisecond }) {
 
 it("memoize and use function cache", () => {
   const option = {
-    duration: 1000, // Cache's time to live (Millisecond)
+    maxAge: 1000, // Cache's time to live (Millisecond)
   };
   const memoizedAdd = memoizeFunction(add, option);
 

@@ -20,6 +20,23 @@ function calcTimeDiff(datetime1, datetime2) {
 }
 
 /**
+ * Check option consistency.
+ * @param {Object} option
+ * @throws {TypeError}
+ * @throws {Error}
+ */
+function checkOptionConsistency(option) {
+  if (option.maxAge && !Number.isInteger(option.maxAge))
+    throw new TypeError("option.maxAge is not an integer");
+  if (option.expirationDate && !isDateValid(option.expirationDate))
+    throw new TypeError("option.expirationDate is not a date");
+  if (option.maxAge && option.expirationDate)
+    throw new Error(
+      "Cannot use option.maxAge and option.expirationDate at the same time"
+    );
+}
+
+/**
  * Memoize function.
  * @param {Function} func
  * @param {JSON} option
@@ -28,7 +45,9 @@ function calcTimeDiff(datetime1, datetime2) {
  * @returns {Function} Memoized function.
  */
 function memoizeFunction(func, option = {}) {
-  let cache = {};
+  checkOptionConsistency(option);
+
+  const cache = {};
 
   const setCacheDeleteTimer = (key, ms) => {
     setTimeout(() => {
@@ -45,14 +64,12 @@ function memoizeFunction(func, option = {}) {
       } else {
         const result = target.apply(thisArg, args);
 
-        if (option.maxAge && Number.isInteger(option.maxAge)) {
-          setCacheDeleteTimer(cacheKey, option.maxAge);
-        }
-
-        if (option.expirationDate && isDateValid(option.expirationDate)) {
-          const ms = calcTimeDiff(option.expirationDate, new Date());
-          setCacheDeleteTimer(cacheKey, ms);
-        }
+        option.maxAge && setCacheDeleteTimer(cacheKey, option.maxAge);
+        option.expirationDate &&
+          setCacheDeleteTimer(
+            cacheKey,
+            calcTimeDiff(option.expirationDate, new Date())
+          );
 
         cache[cacheKey] = result;
         return result;

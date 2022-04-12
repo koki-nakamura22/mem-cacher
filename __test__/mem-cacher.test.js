@@ -25,9 +25,9 @@ function testRapper({ func, params, toBeValue, timeTakenMillisecond }) {
   expect(elapsedTime).toBe(timeTakenMillisecond);
 }
 
-it("memoize and use function cache (maxAge)", () => {
+it("memoize and use function cache using maxAge", () => {
   const option = {
-    maxAge: 1000, // Cache's time to live (Millisecond)
+    maxAge: 1000,
   };
   const memoizedAdd = memoizeFunction(add, option);
 
@@ -72,7 +72,7 @@ it("memoize and use function cache (maxAge)", () => {
   });
 });
 
-it("memoize and use function cache (expirationDate)", () => {
+it("memoize and use function cache using expirationDate", () => {
   jest.setSystemTime(new Date("2022-04-12T23:59:00.000+09:00"));
 
   const cacheexpirationDate = new Date("2022-04-13T00:00:00.000+09:00");
@@ -120,4 +120,36 @@ it("memoize and use function cache (expirationDate)", () => {
     toBeValue: toBeValue,
     timeTakenMillisecond: 1000,
   });
+});
+
+it("option.maxAge is not an integer", () => {
+  expect(() => {
+    const option = {
+      maxAge: "1000",
+    };
+    const memoizedAdd = memoizeFunction(add, option);
+  }).toThrowError(new TypeError("option.maxAge is not an integer"));
+});
+
+it("option.expirationDate is not a date", () => {
+  expect(() => {
+    const option = {
+      expirationDate: "abcde",
+    };
+    const memoizedAdd = memoizeFunction(add, option);
+  }).toThrowError(new TypeError("option.expirationDate is not a date"));
+});
+
+it("set option.maxAge and option.expirationDate at the same time error", () => {
+  expect(() => {
+    const option = {
+      maxAge: 1000,
+      expirationDate: "2022-04-13T00:00:00.000+09:00",
+    };
+    const memoizedAdd = memoizeFunction(add, option);
+  }).toThrowError(
+    new Error(
+      "Cannot use option.maxAge and option.expirationDate at the same time"
+    )
+  );
 });

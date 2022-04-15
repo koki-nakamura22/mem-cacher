@@ -11,122 +11,89 @@ afterEach(() => {
 });
 
 const waitMillisecconds = 1000;
-const wait = (millisecond) => jest.advanceTimersByTime(millisecond);
 
 /**
  * Synchronous function tests
  */
 
 const add = (x, y) => {
-  wait(waitMillisecconds);
+  jest.advanceTimersByTime(waitMillisecconds);
   return x + y;
 };
 
-function testRapper({ func, params, toBeValue, timeTakenMillisecond }) {
+const testRapperSync = ({ func, params, toBeValue, timeTakenMillisecond }) => {
   const startTime = performance.now();
   expect(func(params.x, params.y)).toBe(toBeValue);
   const elapsedTime = performance.now() - startTime;
   expect(elapsedTime).toBe(timeTakenMillisecond);
-}
+};
 
 it("Sync function: memoize and use function cache using maxAge", () => {
+  expect.assertions(8);
+
   const option = {
     maxAge: 1000,
   };
-  const memoizedAdd = memoizeFunction(add, option);
-
-  const params = {
-    x: 1,
-    y: 2,
+  const testParams = {
+    func: memoizeFunction(add, option),
+    params: {
+      x: 1,
+      y: 2,
+    },
+    toBeValue: 3,
   };
-  const toBeValue = 3;
 
   // Not using cache
-  testRapper({
-    func: memoizedAdd,
-    params: params,
-    toBeValue: toBeValue,
-    timeTakenMillisecond: 1000,
-  });
+  testRapperSync({ ...testParams, ...{ timeTakenMillisecond: 1000 } });
 
   // Using cache
-  testRapper({
-    func: memoizedAdd,
-    params: params,
-    toBeValue: toBeValue,
-    timeTakenMillisecond: 0,
-  });
+  testRapperSync({ ...testParams, ...{ timeTakenMillisecond: 0 } });
 
   // Using the cache because it exists
-  wait(500);
-  testRapper({
-    func: memoizedAdd,
-    params: params,
-    toBeValue: toBeValue,
-    timeTakenMillisecond: 0,
-  });
+  jest.advanceTimersByTime(500);
+  testRapperSync({ ...testParams, ...{ timeTakenMillisecond: 0 } });
 
   // Not using the cache because it does not exist
-  wait(500);
-  testRapper({
-    func: memoizedAdd,
-    params: params,
-    toBeValue: toBeValue,
-    timeTakenMillisecond: 1000,
-  });
+  jest.advanceTimersByTime(500);
+  testRapperSync({ ...testParams, ...{ timeTakenMillisecond: 1000 } });
 });
 
 it("Sync function: memoize and use function cache using expirationDate", () => {
+  expect.assertions(8);
+
   jest.setSystemTime(new Date("2022-04-12T23:59:00.000+09:00"));
 
   const cacheexpirationDate = new Date("2022-04-13T00:00:00.000+09:00");
   const option = {
     expirationDate: cacheexpirationDate,
   };
-  const memoizedAdd = memoizeFunction(add, option);
-
-  const params = {
-    x: 1,
-    y: 2,
+  const testParams = {
+    func: memoizeFunction(add, option),
+    params: {
+      x: 1,
+      y: 2,
+    },
+    toBeValue: 3,
   };
-  const toBeValue = 3;
 
   // Not using cache
-  testRapper({
-    func: memoizedAdd,
-    params: params,
-    toBeValue: toBeValue,
-    timeTakenMillisecond: 1000,
-  });
+  testRapperSync({ ...testParams, timeTakenMillisecond: 1000 });
 
   // Using cache
-  testRapper({
-    func: memoizedAdd,
-    params: params,
-    toBeValue: toBeValue,
-    timeTakenMillisecond: 0,
-  });
+  testRapperSync({ ...testParams, timeTakenMillisecond: 0 });
 
   // Using the cache because the expiration date time has not come
-  wait(58 * 1000); // Advance to "2022-04-12T23:59:59.000+09:00"
-  testRapper({
-    func: memoizedAdd,
-    params: params,
-    toBeValue: toBeValue,
-    timeTakenMillisecond: 0,
-  });
+  jest.advanceTimersByTime(58 * 1000); // Advance to "2022-04-12T23:59:59.000+09:00"
+  testRapperSync({ ...testParams, timeTakenMillisecond: 0 });
 
   // Not using the cache because the cache expired
-  wait(1 * 1000); // Advance to "2022-04-13T00:00:00.000+09:00"
-  testRapper({
-    func: memoizedAdd,
-    params: params,
-    toBeValue: toBeValue,
-    timeTakenMillisecond: 1000,
-  });
+  jest.advanceTimersByTime(1 * 1000); // Advance to "2022-04-13T00:00:00.000+09:00"
+  testRapperSync({ ...testParams, timeTakenMillisecond: 1000 });
 });
 
 it("Sync function: option.maxAge is not an integer", () => {
+  expect.assertions(1);
+
   expect(() => {
     const option = {
       maxAge: "1000",
@@ -136,6 +103,8 @@ it("Sync function: option.maxAge is not an integer", () => {
 });
 
 it("Sync function: option.expirationDate is not a date", () => {
+  expect.assertions(1);
+
   expect(() => {
     const option = {
       expirationDate: "abcde",
@@ -145,6 +114,8 @@ it("Sync function: option.expirationDate is not a date", () => {
 });
 
 it("Sync function: set option.maxAge and option.expirationDate at the same time error", () => {
+  expect.assertions(1);
+
   expect(() => {
     const option = {
       maxAge: 1000,
@@ -166,7 +137,7 @@ const asyncAdd = async (x, y) => {
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve(x + y);
-    }, 1000);
+    }, waitMillisecconds);
   });
 };
 
@@ -257,6 +228,8 @@ it("Async function: memoize and use function cache using maxAge", async () => {
 });
 
 it("Async function: memoize and use function cache using expirationDate", async () => {
+  expect.assertions(8);
+
   jest.setSystemTime(new Date("2022-04-12T23:59:00.000+09:00"));
 
   const cacheexpirationDate = new Date("2022-04-13T00:00:00.000+09:00");

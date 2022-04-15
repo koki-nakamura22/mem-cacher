@@ -23,10 +23,46 @@ const add = (x, y) => {
 
 const testRapperSync = ({ func, params, toBeValue, timeTakenMillisecond }) => {
   const startTime = performance.now();
-  expect(func(params.x, params.y)).toBe(toBeValue);
+  expect(func(...Object.values(params))).toBe(toBeValue);
   const elapsedTime = performance.now() - startTime;
   expect(elapsedTime).toBe(timeTakenMillisecond);
 };
+
+it("Sync function: memoize and use function cache with no options", () => {
+  expect.assertions(6);
+
+  const memoizedAdd = memoizeFunction(add);
+
+  testRapperSync({
+    func: memoizedAdd,
+    params: {
+      x: 1,
+      y: 2,
+    },
+    toBeValue: 3,
+    timeTakenMillisecond: 1000,
+  });
+
+  testRapperSync({
+    func: memoizedAdd,
+    params: {
+      x: 1,
+      y: 2,
+    },
+    toBeValue: 3,
+    timeTakenMillisecond: 0,
+  });
+
+  testRapperSync({
+    func: memoizedAdd,
+    params: {
+      x: 3,
+      y: 4,
+    },
+    toBeValue: 7,
+    timeTakenMillisecond: 1000,
+  });
+});
 
 it("Sync function: memoize and use function cache using maxAge", () => {
   expect.assertions(8);
